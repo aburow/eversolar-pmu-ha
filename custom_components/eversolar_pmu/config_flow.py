@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_validation import All, Range
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_AUTO_SYNC_DELAY,
@@ -95,8 +95,8 @@ class EversolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=1.0, max=30.0)
                 ),
-                vol.Optional(CONF_TIMEZONE, default=DEFAULT_TIMEZONE): SelectSelector(
-                    SelectSelectorConfig(options=TIMEZONES)
+                vol.Optional(CONF_TIMEZONE, default=DEFAULT_TIMEZONE): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=TIMEZONES)
                 ),
             }
         )
@@ -146,7 +146,7 @@ class EversolarOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_TIMEZONE,
                     default=self.config_entry.data.get(CONF_TIMEZONE, DEFAULT_TIMEZONE),
-                ): SelectSelector(SelectSelectorConfig(options=TIMEZONES)),
+                ): selector.SelectSelector(selector.SelectSelectorConfig(options=TIMEZONES)),
                 vol.Optional(
                     CONF_AUTO_SYNC_ENABLED,
                     default=self.config_entry.data.get(CONF_AUTO_SYNC_ENABLED, False),
