@@ -2,10 +2,10 @@
   "domain": "eversolar_pmu",
   "name": "Eversolar PMU",
   "version": "1.1.2",
-  "documentation": "https://github.com/anthropics/eversolar-pmu",
-  "issue_tracker": "https://github.com/anthropics/eversolar-pmu/issues",
+  "documentation": "http://192.168.0.178:3000/aburow/eversolar-pmu-ha",
+  "issue_tracker": "http://192.168.0.178:3000/aburow/eversolar-pmu-ha/issues",
   "requirements": [],
-  "codeowners": ["@anthropics"],
+  "codeowners": ["@aburow"],
   "config_flow": true,
   "iot_class": "local_polling",
   "integration_type": "device"

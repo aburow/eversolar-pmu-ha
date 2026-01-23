@@ -8,7 +8,7 @@
    - Open Home Assistant
    - Settings → Devices & Services → HACS
    - Click three-dot menu → Custom repositories
-   - URL: `https://github.com/anthropics/eversolar-pmu`
+   - URL: `http://192.168.0.178:3000/aburow/eversolar-pmu-ha`
    - Category: Integration
    - Click Create
 
@@ -290,7 +290,7 @@ A: Yes, the original script (`eversolar_pmu_poll_dynamic.py`) works standalone.
 A: The config flow includes a text input for custom timezones (like `America/New_York`).
 
 **Q: How do I report bugs?**
-A: GitHub Issues: https://github.com/anthropics/eversolar-pmu/issues
+A: GitHub Issues: http://192.168.0.178:3000/aburow/eversolar-pmu-ha/issues
 
 ---
 

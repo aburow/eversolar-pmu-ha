@@ -37,7 +37,7 @@ When suggesting a feature or improvement, please:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/anthropics/eversolar-pmu-ha.git
+   git clone http://192.168.0.178:3000/aburow/eversolar-pmu-ha.git
    cd eversolar-pmu-ha
    ```
 
@@ -177,7 +177,7 @@ All pull requests will be reviewed for:
 
 ## Questions?
 
-- Check the main project documentation: https://github.com/anthropics/eversolar-pmu
+- Check the main project documentation: http://192.168.0.178:3000/aburow/eversolar-pmu-ha
 - Review Home Assistant integration docs: https://developers.home-assistant.io/
 - Open an issue to discuss
 

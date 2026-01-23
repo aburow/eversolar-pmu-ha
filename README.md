@@ -113,12 +113,12 @@ nc -zv 192.168.0.190 8080
 1. Compare with the original script:
    ```bash
    # Clone the main repository
-   git clone https://github.com/anthropics/eversolar-pmu.git
+   git clone http://192.168.0.178:3000/aburow/eversolar-pmu-ha.git
    cd eversolar-pmu
    python3 eversolar_pmu_poll_dynamic.py --host 192.168.0.190
    ```
 
-2. Check the protocol documentation: https://github.com/anthropics/eversolar-pmu
+2. Check the protocol documentation: http://192.168.0.178:3000/aburow/eversolar-pmu-ha
 
 3. Enable debug logging in Home Assistant:
    ```yaml
@@ -244,15 +244,15 @@ entities:
 - **[info.md](info.md)** - Feature overview for HACS UI
 
 For comprehensive integration development documentation, see the main project:
-https://github.com/anthropics/eversolar-pmu
+http://192.168.0.178:3000/aburow/eversolar-pmu-ha
 
 ## Support
 
 For issues, questions, or feature requests:
-- GitHub Issues: https://github.com/anthropics/eversolar-pmu-ha/issues
+- GitHub Issues: http://192.168.0.178:3000/aburow/eversolar-pmu-ha/issues
 
 For protocol questions and script usage:
-- Main Project: https://github.com/anthropics/eversolar-pmu
+- Main Project: http://192.168.0.178:3000/aburow/eversolar-pmu-ha
 
 ## License
 
@@ -260,8 +260,8 @@ This project is part of the Eversolar PMU project. See LICENSE file for details.
 
 ## Related Projects
 
-- **[eversolar-pmu](https://github.com/anthropics/eversolar-pmu)** - Main project with standalone Python script, protocol documentation, and detailed implementation guides
-- **[eversolar-pmu-ha](https://github.com/anthropics/eversolar-pmu-ha)** - This repository (Home Assistant integration only)
+- **[eversolar-pmu](http://192.168.0.178:3000/aburow/eversolar-pmu-ha)** - Main project with standalone Python script, protocol documentation, and detailed implementation guides
+- **[eversolar-pmu-ha](http://192.168.0.178:3000/aburow/eversolar-pmu-ha)** - This repository (Home Assistant integration only)
 
 ---
 
