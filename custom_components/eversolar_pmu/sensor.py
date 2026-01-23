@@ -31,6 +31,7 @@ from .const import (
     SENSOR_PV_VOLTAGE,
     SENSOR_TIME_DELTA,
     SENSOR_VOLTAGE,
+    CONF_PV_VOLTAGE_THRESHOLD,
 )
 from .coordinator import EversolarDataUpdateCoordinator
 
@@ -136,6 +137,18 @@ async def async_setup_entry(
             "s",
             SensorStateClass.MEASUREMENT,
         ),
+        EversolarACOnlineTimestamp(
+            coordinator,
+            "ac_online_time",
+            "AC Online Time",
+            "ac_online_time",
+        ),
+        EversolarACOfflineTimestamp(
+            coordinator,
+            "ac_offline_time",
+            "AC Offline Time",
+            "ac_offline_time",
+        ),
     ]
 
     async_add_entities(entities)
@@ -172,6 +185,29 @@ class EversolarSensor(CoordinatorEntity, SensorEntity):
         if self.coordinator.inverter_id:
             return f"{DOMAIN}_{self.coordinator.inverter_id}_{self._sensor_type}"
         return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_{self._sensor_type}"
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # If coordinator is unavailable, entity is unavailable
+        if not super().available:
+            return False
+
+        # If inverter is fully down, mark power-related sensors as unavailable
+        if self.coordinator.is_fully_down:
+            unavailable_types = {
+                SENSOR_POWER,
+                SENSOR_VOLTAGE,
+                SENSOR_FREQUENCY,
+                SENSOR_ENERGY_TODAY,
+                SENSOR_PV_VOLTAGE,
+                SENSOR_PV_CURRENT,
+                SENSOR_PV_POWER,
+            }
+            if self._sensor_type in unavailable_types:
+                return False
+
+        return True
 
     @property
     def native_value(self) -> Optional[Any]:
@@ -218,3 +254,81 @@ class EversolarDiagnosticSensor(EversolarSensor):
             attrs[ATTR_PMU_TIME_STUCK] = self.coordinator.data.get("pmu_time_stuck")
 
         return attrs
+
+
+class EversolarACOnlineTimestamp(CoordinatorEntity, SensorEntity):
+    """AC Online Timestamp sensor."""
+
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, coordinator: EversolarDataUpdateCoordinator, sensor_type: str, name: str, data_key: str) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator)
+        self._sensor_type = sensor_type
+        self._data_key = data_key
+        self._attr_name = name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self.coordinator.inverter_id:
+            return f"{DOMAIN}_{self.coordinator.inverter_id}_ac_online_time"
+        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_ac_online_time"
+
+    @property
+    def native_value(self) -> Optional[Any]:
+        """Return the state of the sensor."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get(self._data_key)
+
+    @property
+    def device_info(self) -> dict:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
+            "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
+            "manufacturer": "Eversolar",
+            "model": "PMU",
+            "sw_version": "1.0",
+        }
+
+
+class EversolarACOfflineTimestamp(CoordinatorEntity, SensorEntity):
+    """AC Offline Timestamp sensor."""
+
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, coordinator: EversolarDataUpdateCoordinator, sensor_type: str, name: str, data_key: str) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator)
+        self._sensor_type = sensor_type
+        self._data_key = data_key
+        self._attr_name = name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self.coordinator.inverter_id:
+            return f"{DOMAIN}_{self.coordinator.inverter_id}_ac_offline_time"
+        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_ac_offline_time"
+
+    @property
+    def native_value(self) -> Optional[Any]:
+        """Return the state of the sensor."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get(self._data_key)
+
+    @property
+    def device_info(self) -> dict:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
+            "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
+            "manufacturer": "Eversolar",
+            "model": "PMU",
+            "sw_version": "1.0",
+        }

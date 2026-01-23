@@ -6,11 +6,15 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.config_validation import All, Range
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
+    CONF_AUTO_SYNC_DELAY,
+    CONF_AUTO_SYNC_ENABLED,
     CONF_HOST,
     CONF_PORT,
+    CONF_PV_VOLTAGE_THRESHOLD,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     CONF_TIMEZONE,
@@ -143,6 +147,18 @@ class EversolarOptionsFlow(config_entries.OptionsFlow):
                     CONF_TIMEZONE,
                     default=self.config_entry.data.get(CONF_TIMEZONE, DEFAULT_TIMEZONE),
                 ): SelectSelector(SelectSelectorConfig(options=TIMEZONES)),
+                vol.Optional(
+                    CONF_AUTO_SYNC_ENABLED,
+                    default=self.config_entry.data.get(CONF_AUTO_SYNC_ENABLED, False),
+                ): bool,
+                vol.Optional(
+                    CONF_AUTO_SYNC_DELAY,
+                    default=self.config_entry.data.get(CONF_AUTO_SYNC_DELAY, 1),
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
+                vol.Optional(
+                    CONF_PV_VOLTAGE_THRESHOLD,
+                    default=self.config_entry.data.get(CONF_PV_VOLTAGE_THRESHOLD, 50),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=200)),
             }
         )
 

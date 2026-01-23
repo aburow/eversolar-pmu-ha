@@ -8,6 +8,9 @@ CONF_PORT = "port"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_TIMEOUT = "timeout"
 CONF_TIMEZONE = "timezone"
+CONF_AUTO_SYNC_ENABLED = "auto_sync_enabled"
+CONF_AUTO_SYNC_DELAY = "auto_sync_delay"
+CONF_PV_VOLTAGE_THRESHOLD = "pv_voltage_threshold"
 
 # Defaults
 DEFAULT_PORT = 8080
