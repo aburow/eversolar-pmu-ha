@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_AUTO_SYNC_DELAY,
@@ -16,34 +15,14 @@ from .const import (
     CONF_PV_VOLTAGE_THRESHOLD,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    CONF_TIMEZONE,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
-    DEFAULT_TIMEZONE,
     DOMAIN,
 )
 from .eversolar_protocol import EversolarPMU
 
 _LOGGER = logging.getLogger(__name__)
-
-# Common timezones
-TIMEZONES = [
-    "Australia/Brisbane",
-    "Australia/Sydney",
-    "Australia/Melbourne",
-    "Australia/Perth",
-    "Australia/Adelaide",
-    "Australia/Darwin",
-    "UTC",
-    "America/New_York",
-    "America/Los_Angeles",
-    "Europe/London",
-    "Europe/Berlin",
-    "Asia/Tokyo",
-    "Asia/Shanghai",
-    "Asia/Singapore",
-]
 
 
 class EversolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -94,9 +73,6 @@ class EversolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=1.0, max=30.0)
                 ),
-                vol.Optional(CONF_TIMEZONE, default=DEFAULT_TIMEZONE): SelectSelector(
-                    SelectSelectorConfig(options=TIMEZONES)
-                ),
             }
         )
 
@@ -134,29 +110,27 @@ class EversolarOptionsFlow(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
-                    default=self.config_entry.data.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
                     ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=10, max=300)),
                 vol.Optional(
                     CONF_TIMEOUT,
-                    default=self.config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+                    default=self.config_entry.options.get(
+                        CONF_TIMEOUT, self.config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+                    ),
                 ): vol.All(vol.Coerce(float), vol.Range(min=1.0, max=30.0)),
                 vol.Optional(
-                    CONF_TIMEZONE,
-                    default=self.config_entry.data.get(CONF_TIMEZONE, DEFAULT_TIMEZONE),
-                ): SelectSelector(SelectSelectorConfig(options=TIMEZONES)),
-                vol.Optional(
                     CONF_AUTO_SYNC_ENABLED,
-                    default=self.config_entry.data.get(CONF_AUTO_SYNC_ENABLED, False),
+                    default=self.config_entry.options.get(CONF_AUTO_SYNC_ENABLED, self.config_entry.data.get(CONF_AUTO_SYNC_ENABLED, False)),
                 ): bool,
                 vol.Optional(
                     CONF_AUTO_SYNC_DELAY,
-                    default=self.config_entry.data.get(CONF_AUTO_SYNC_DELAY, 1),
+                    default=self.config_entry.options.get(CONF_AUTO_SYNC_DELAY, self.config_entry.data.get(CONF_AUTO_SYNC_DELAY, 1)),
                 ): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
                 vol.Optional(
                     CONF_PV_VOLTAGE_THRESHOLD,
-                    default=self.config_entry.data.get(CONF_PV_VOLTAGE_THRESHOLD, 50),
+                    default=self.config_entry.options.get(CONF_PV_VOLTAGE_THRESHOLD, self.config_entry.data.get(CONF_PV_VOLTAGE_THRESHOLD, 50)),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=200)),
             }
         )

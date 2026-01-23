@@ -13,10 +13,8 @@ from .const import (
     CONF_PV_VOLTAGE_THRESHOLD,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    CONF_TIMEZONE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
-    DEFAULT_TIMEZONE,
     DOMAIN,
 )
 from .eversolar_protocol import EversolarPMU
@@ -58,6 +56,10 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
+    def _get_config(self, key: str, default=None):
+        """Get config value from options first, then data, then default."""
+        return self.config_entry.options.get(key) or self.config_entry.data.get(key, default)
+
     @property
     def is_fully_down(self) -> bool:
         """Check if inverter is fully down (Wait mode + low PV voltage)."""
@@ -65,7 +67,7 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
             return False
         mode = self.data.get("mode")
         pv_voltage = self.data.get("pv_v", 0) or 0
-        threshold = self.config_entry.data.get(CONF_PV_VOLTAGE_THRESHOLD, 50)
+        threshold = self._get_config(CONF_PV_VOLTAGE_THRESHOLD, 50)
         return mode == 0x0000 and pv_voltage < threshold
 
     async def _async_update_data(self) -> dict:
@@ -74,7 +76,7 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
             data = await self.hass.async_add_executor_job(
                 self.pmu.connect_and_poll,
                 False,  # set_time=False for normal polling
-                self.config_entry.data.get(CONF_TIMEZONE, DEFAULT_TIMEZONE),
+                self.hass.config.time_zone,
             )
 
             # Store inverter ID on first successful poll
@@ -83,7 +85,7 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Inverter ID: %s", self.inverter_id)
 
             # Check if auto-sync feature is enabled
-            auto_sync_enabled = self.config_entry.data.get(CONF_AUTO_SYNC_ENABLED, False)
+            auto_sync_enabled = self._get_config(CONF_AUTO_SYNC_ENABLED, False)
             if auto_sync_enabled:
                 current_mode = data.get("mode")
                 pv_voltage = data.get("pv_v")
@@ -102,7 +104,7 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
                     and current_mode == 0x0001
                 ):
                     # Inverter just started up - voltage exceeded threshold
-                    delay_minutes = self.config_entry.data.get(CONF_AUTO_SYNC_DELAY, 1)
+                    delay_minutes = self._get_config(CONF_AUTO_SYNC_DELAY, 1)
                     delay_seconds = delay_minutes * 60
                     self._sync_trigger_time = datetime.now() + timedelta(seconds=delay_seconds)
                     self._sync_pending = True
@@ -162,7 +164,7 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_sync_time(self) -> bool:
         """Sync PMU time to host time."""
         try:
-            tz_name = self.config_entry.data.get(CONF_TIMEZONE, DEFAULT_TIMEZONE)
+            tz_name = self.hass.config.time_zone
             await self.hass.async_add_executor_job(
                 self.pmu.sync_time,
                 tz_name,

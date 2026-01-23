@@ -67,7 +67,7 @@ class EversolarACOnlineSensor(CoordinatorEntity, BinarySensorEntity):
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
             "model": "PMU",
-            "sw_version": "1.0",
+            "sw_version": "1.1.2",
         }
 
 
@@ -102,5 +102,5 @@ class EversolarFullyDownSensor(CoordinatorEntity, BinarySensorEntity):
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
             "model": "PMU",
-            "sw_version": "1.0",
+            "sw_version": "1.1.2",
         }

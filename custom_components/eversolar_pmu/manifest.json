@@ -1,7 +1,7 @@
 {
   "domain": "eversolar_pmu",
   "name": "Eversolar PMU",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "documentation": "https://github.com/anthropics/eversolar-pmu",
   "issue_tracker": "https://github.com/anthropics/eversolar-pmu/issues",
   "requirements": [],

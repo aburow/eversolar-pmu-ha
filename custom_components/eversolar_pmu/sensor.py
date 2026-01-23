@@ -224,7 +224,7 @@ class EversolarSensor(CoordinatorEntity, SensorEntity):
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
             "model": "PMU",
-            "sw_version": "1.0",
+            "sw_version": "1.1.2",
         }
 
 
@@ -291,7 +291,7 @@ class EversolarACOnlineTimestamp(CoordinatorEntity, SensorEntity):
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
             "model": "PMU",
-            "sw_version": "1.0",
+            "sw_version": "1.1.2",
         }
 
 
@@ -330,5 +330,5 @@ class EversolarACOfflineTimestamp(CoordinatorEntity, SensorEntity):
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
             "model": "PMU",
-            "sw_version": "1.0",
+            "sw_version": "1.1.2",
         }
