@@ -1,0 +1,11 @@
+sync_time:
+  name: Sync PMU Time
+  description: Synchronize the PMU internal clock to the current host time
+  fields:
+    config_entry_id:
+      name: Config Entry ID
+      description: The config entry ID of the Eversolar PMU integration instance
+      required: true
+      example: "abc123def456"
+      selector:
+        text:

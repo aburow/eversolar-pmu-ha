@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Eversolar PMU",
+        "description": "Enter the connection details for your Eversolar inverter PMU",
+        "data": {
+          "host": "Host IP Address",
+          "port": "Port",
+          "scan_interval": "Scan Interval (seconds)",
+          "timeout": "Connection Timeout (seconds)",
+          "timezone": "Timezone"
+        },
+        "data_description": {
+          "host": "IP address of your Eversolar inverter",
+          "port": "TCP port (default 8080)",
+          "scan_interval": "How often to poll the inverter (10-300 seconds)",
+          "timeout": "Connection timeout in seconds (1-30)",
+          "timezone": "Timezone for time sync operations"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the PMU. Check the IP address and ensure the inverter is powered on."
+    },
+    "abort": {
+      "already_configured": "This PMU is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Eversolar PMU Options",
+        "description": "Update polling and connection settings",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)",
+          "timeout": "Connection Timeout (seconds)",
+          "timezone": "Timezone"
+        }
+      }
+    }
+  },
+  "services": {
+    "sync_time": {
+      "name": "Sync PMU Time",
+      "description": "Synchronize the PMU internal clock to the current host time",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Eversolar PMU integration instance"
+        }
+      }
+    }
+  }
+}
