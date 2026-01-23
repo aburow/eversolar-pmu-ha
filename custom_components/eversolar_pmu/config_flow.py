@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.config_validation import All, Range
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_AUTO_SYNC_DELAY,
@@ -16,14 +16,34 @@ from .const import (
     CONF_PV_VOLTAGE_THRESHOLD,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
+    CONF_TIMEZONE,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
+    DEFAULT_TIMEZONE,
     DOMAIN,
 )
 from .eversolar_protocol import EversolarPMU
 
 _LOGGER = logging.getLogger(__name__)
+
+# Common timezones
+TIMEZONES = [
+    "Australia/Brisbane",
+    "Australia/Sydney",
+    "Australia/Melbourne",
+    "Australia/Perth",
+    "Australia/Adelaide",
+    "Australia/Darwin",
+    "UTC",
+    "America/New_York",
+    "America/Los_Angeles",
+    "Europe/London",
+    "Europe/Berlin",
+    "Asia/Tokyo",
+    "Asia/Shanghai",
+    "Asia/Singapore",
+]
 
 
 class EversolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,6 +94,9 @@ class EversolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=1.0, max=30.0)
                 ),
+                vol.Optional(CONF_TIMEZONE, default=DEFAULT_TIMEZONE): SelectSelector(
+                    SelectSelectorConfig(options=TIMEZONES)
+                ),
             }
         )
 
@@ -119,6 +142,10 @@ class EversolarOptionsFlow(config_entries.OptionsFlow):
                     CONF_TIMEOUT,
                     default=self.config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
                 ): vol.All(vol.Coerce(float), vol.Range(min=1.0, max=30.0)),
+                vol.Optional(
+                    CONF_TIMEZONE,
+                    default=self.config_entry.data.get(CONF_TIMEZONE, DEFAULT_TIMEZONE),
+                ): SelectSelector(SelectSelectorConfig(options=TIMEZONES)),
                 vol.Optional(
                     CONF_AUTO_SYNC_ENABLED,
                     default=self.config_entry.data.get(CONF_AUTO_SYNC_ENABLED, False),
