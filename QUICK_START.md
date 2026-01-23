@@ -304,5 +304,5 @@ A: GitHub Issues: https://github.com/anthropics/eversolar-pmu/issues
 ---
 
 **Last Updated**: 2026-01-23
-**Integration Version**: 1.0.0
+**Integration Version**: 1.1.2
 **Status**: Production Ready ✅

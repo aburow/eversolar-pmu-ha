@@ -42,3 +42,8 @@ htmlcov/
 .storage/
 configuration.yaml
 deps/
+
+# Package archives
+*.tgz
+*.tar.gz
+*.zip

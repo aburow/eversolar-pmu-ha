@@ -265,7 +265,7 @@ This project is part of the Eversolar PMU project. See LICENSE file for details.
 
 ---
 
-**Version**: 1.0.0
+**Version**: 1.1.2
 **Status**: Production Ready ✅
 **Home Assistant**: 2021.12.0+
 **Python**: 3.9+
