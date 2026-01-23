@@ -19,7 +19,7 @@ A native Home Assistant custom integration for Eversolar solar inverter Power Ma
 1. Open Home Assistant and go to **HACS**
 2. Click **Integrations**
 3. Click the three-dot menu → **Custom repositories**
-4. Add this repository URL: `https://github.com/anthropics/eversolar-pmu-ha`
+4. Add this repository URL: `http://192.168.100.114:3000/home/eversolar-pmu-ha`
 5. Category: **Integration**
 6. Click **Create**
 7. Search for "Eversolar PMU"
