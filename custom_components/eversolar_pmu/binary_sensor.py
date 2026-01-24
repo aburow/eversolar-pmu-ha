@@ -65,8 +65,7 @@ class EversolarACDCOfflineSensor(CoordinatorEntity, BinarySensorEntity):
             "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
-            "model": "PMU",
-            "sw_version": "1.1.2",
+            "model": "PMU (TCP/IP)",
         }
 
 
@@ -109,6 +108,5 @@ class EversolarTimeSyncSensor(CoordinatorEntity, BinarySensorEntity):
             "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
-            "model": "PMU",
-            "sw_version": "1.1.2",
+            "model": "PMU (TCP/IP)",
         }

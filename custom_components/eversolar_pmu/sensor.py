@@ -6,6 +6,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
+    EntityCategory,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -143,6 +144,7 @@ async def async_setup_entry(
         ),
         EversolarOperationModeSensor(coordinator),
         EversolarErrorMessageSensor(coordinator),
+        EversolarDailyEfficiencySensor(coordinator),
     ]
 
     async_add_entities(entities)
@@ -229,8 +231,7 @@ class EversolarSensor(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
-            "model": "PMU",
-            "sw_version": "1.1.2",
+            "model": "PMU (TCP/IP)",
         }
 
 
@@ -296,8 +297,7 @@ class EversolarACOnlineTimestamp(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
-            "model": "PMU",
-            "sw_version": "1.1.2",
+            "model": "PMU (TCP/IP)",
         }
 
 
@@ -335,8 +335,7 @@ class EversolarACOfflineTimestamp(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
-            "model": "PMU",
-            "sw_version": "1.1.2",
+            "model": "PMU (TCP/IP)",
         }
 
 
@@ -381,8 +380,7 @@ class EversolarOperationModeSensor(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
-            "model": "PMU",
-            "sw_version": "1.1.2",
+            "model": "PMU (TCP/IP)",
         }
 
 
@@ -454,6 +452,67 @@ class EversolarErrorMessageSensor(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
             "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
             "manufacturer": "Eversolar",
-            "model": "PMU",
-            "sw_version": "1.1.2",
+            "model": "PMU (TCP/IP)",
+        }
+
+
+class EversolarDailyEfficiencySensor(CoordinatorEntity, SensorEntity):
+    """Daily Efficiency sensor."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Daily Efficiency"
+    _attr_native_unit_of_measurement = "%"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: EversolarDataUpdateCoordinator) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self.coordinator.inverter_id:
+            return f"{DOMAIN}_{self.coordinator.inverter_id}_daily_efficiency"
+        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_daily_efficiency"
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not super().available:
+            return False
+        # Available only if both energy and power data exist
+        if not self.coordinator.data:
+            return False
+        energy = self.coordinator.data.get("e_today_kwh")
+        power = self.coordinator.data.get("pv_w_est")
+        return energy is not None and power is not None and power > 0
+
+    @property
+    def native_value(self) -> Optional[float]:
+        """Return the daily efficiency percentage."""
+        if not self.coordinator.data:
+            return None
+
+        energy_kwh = self.coordinator.data.get("e_today_kwh")
+        power_w = self.coordinator.data.get("pv_w_est")
+
+        if energy_kwh is None or power_w is None or power_w <= 0:
+            return None
+
+        # efficiency = (energy_kwh / 24 / (power_w / 1000)) * 100
+        try:
+            efficiency = (energy_kwh / 24 / (power_w / 1000)) * 100
+            return round(efficiency, 1)
+        except (ValueError, ZeroDivisionError):
+            return None
+
+    @property
+    def device_info(self) -> dict:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
+            "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
+            "manufacturer": "Eversolar",
+            "model": "PMU (TCP/IP)",
         }
