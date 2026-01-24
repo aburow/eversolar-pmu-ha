@@ -1,7 +1,7 @@
 {
   "domain": "eversolar_pmu",
   "name": "Eversolar PMU",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "documentation": "http://192.168.0.178:3000/aburow/eversolar-pmu-ha",
   "issue_tracker": "http://192.168.0.178:3000/aburow/eversolar-pmu-ha/issues",
   "requirements": [],
