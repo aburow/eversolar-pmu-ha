@@ -68,10 +68,11 @@ class EversolarPVVoltageStatsCutoffNumber(CoordinatorEntity, NumberEntity):
         """Set PV voltage stats cutoff."""
         new_options = dict(self.config_entry.options)
         new_options[CONF_PV_VOLTAGE_STATS_CUTOFF] = int(value)
-        await self.hass.config_entries.async_update_entry(
+        self.hass.config_entries.async_update_entry(
             self.config_entry,
             options=new_options,
         )
+        self.async_write_ha_state()
 
     @property
     def device_info(self) -> dict:
