@@ -66,12 +66,17 @@ class EversolarPVVoltageStatsCutoffNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set PV voltage stats cutoff."""
+        # Create a new options dict with the updated value
         new_options = dict(self.config_entry.options)
         new_options[CONF_PV_VOLTAGE_STATS_CUTOFF] = int(value)
+
+        # Update the config entry options using Home Assistant API
         self.hass.config_entries.async_update_entry(
             self.config_entry,
             options=new_options,
         )
+
+        # Update UI state
         self.async_write_ha_state()
 
     @property
