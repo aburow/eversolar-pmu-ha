@@ -19,7 +19,10 @@ from .const import (
     ATTR_PMU_EPOCH_STEP,
     ATTR_PMU_TIME_STUCK,
     ATTR_PMU_TIME_UTC,
+    CONF_PV_VOLTAGE_STATS_CUTOFF,
+    CONF_PV_VOLTAGE_THRESHOLD,
     DOMAIN,
+    ERROR_MESSAGES,
     SENSOR_DATA_KEYS,
     SENSOR_ENERGY_TODAY,
     SENSOR_ENERGY_TOTAL,
@@ -29,9 +32,7 @@ from .const import (
     SENSOR_PV_CURRENT,
     SENSOR_PV_POWER,
     SENSOR_PV_VOLTAGE,
-    SENSOR_TIME_DELTA,
     SENSOR_VOLTAGE,
-    CONF_PV_VOLTAGE_THRESHOLD,
 )
 from .coordinator import EversolarDataUpdateCoordinator
 
@@ -128,15 +129,6 @@ async def async_setup_entry(
             "W",
             SensorStateClass.MEASUREMENT,
         ),
-        EversolarDiagnosticSensor(
-            coordinator,
-            SENSOR_TIME_DELTA,
-            "PMU Time Delta",
-            "time_delta",
-            None,
-            "s",
-            SensorStateClass.MEASUREMENT,
-        ),
         EversolarACOnlineTimestamp(
             coordinator,
             "ac_online_time",
@@ -149,6 +141,8 @@ async def async_setup_entry(
             "AC Offline Time",
             "ac_offline_time",
         ),
+        EversolarOperationModeSensor(coordinator),
+        EversolarErrorMessageSensor(coordinator),
     ]
 
     async_add_entities(entities)
@@ -205,6 +199,18 @@ class EversolarSensor(CoordinatorEntity, SensorEntity):
                 SENSOR_PV_POWER,
             }
             if self._sensor_type in unavailable_types:
+                return False
+
+        # If PV voltage is below stats cutoff, mark statistics as unreliable
+        if self.coordinator.is_below_stats_cutoff:
+            stats_types = {
+                SENSOR_ENERGY_TODAY,
+                SENSOR_ENERGY_TOTAL,
+                SENSOR_HOURS_TOTAL,
+                SENSOR_POWER,
+                SENSOR_PV_POWER,
+            }
+            if self._sensor_type in stats_types:
                 return False
 
         return True
@@ -321,6 +327,125 @@ class EversolarACOfflineTimestamp(CoordinatorEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.get(self._data_key)
+
+    @property
+    def device_info(self) -> dict:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
+            "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
+            "manufacturer": "Eversolar",
+            "model": "PMU",
+            "sw_version": "1.1.2",
+        }
+
+
+class EversolarOperationModeSensor(CoordinatorEntity, SensorEntity):
+    """Operation Mode sensor."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Operation Mode"
+
+    def __init__(self, coordinator: EversolarDataUpdateCoordinator) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self.coordinator.inverter_id:
+            return f"{DOMAIN}_{self.coordinator.inverter_id}_operation_mode"
+        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_operation_mode"
+
+    @property
+    def native_value(self) -> Optional[str]:
+        """Return the operation mode state."""
+        if not self.coordinator.data:
+            return None
+        mode = self.coordinator.data.get("mode")
+        if mode is None:
+            return None
+
+        mode_map = {
+            0x0000: "Wait",
+            0x0001: "Normal",
+            0x0002: "Fault",
+            0x0003: "Permanent Fault",
+        }
+        return mode_map.get(mode, "Unknown")
+
+    @property
+    def device_info(self) -> dict:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.inverter_id or self.coordinator.config_entry.entry_id)},
+            "name": f"Eversolar Inverter {self.coordinator.inverter_id or 'Unknown'}",
+            "manufacturer": "Eversolar",
+            "model": "PMU",
+            "sw_version": "1.1.2",
+        }
+
+
+class EversolarErrorMessageSensor(CoordinatorEntity, SensorEntity):
+    """Error Message Bit Flags sensor."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Error Messages"
+
+    def __init__(self, coordinator: EversolarDataUpdateCoordinator) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self.coordinator.inverter_id:
+            return f"{DOMAIN}_{self.coordinator.inverter_id}_error_messages"
+        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_error_messages"
+
+    @property
+    def native_value(self) -> Optional[str]:
+        """Return the active error messages."""
+        if not self.coordinator.data:
+            return None
+        error_flags = self.coordinator.data.get("error_flags")
+        if error_flags is None:
+            return "No errors"
+
+        if error_flags == 0:
+            return "No errors"
+
+        active_errors = []
+        for bit_pos, error_name in ERROR_MESSAGES.items():
+            if error_flags & (1 << bit_pos):
+                active_errors.append(error_name)
+
+        if not active_errors:
+            return "No errors"
+
+        return ", ".join(active_errors)
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return error flags as attributes."""
+        if not self.coordinator.data:
+            return {}
+
+        error_flags = self.coordinator.data.get("error_flags")
+        if error_flags is None:
+            return {}
+
+        attrs = {
+            "error_flags_hex": f"0x{error_flags:08x}",
+            "error_flags_int": error_flags,
+        }
+
+        # Add individual bit states
+        for bit_pos, error_name in ERROR_MESSAGES.items():
+            is_active = bool(error_flags & (1 << bit_pos))
+            attrs[f"bit_{bit_pos}_{error_name.lower().replace('-', '_')}"] = is_active
+
+        return attrs
 
     @property
     def device_info(self) -> dict:

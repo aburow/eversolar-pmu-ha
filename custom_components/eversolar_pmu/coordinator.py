@@ -10,6 +10,7 @@ from .const import (
     CONF_AUTO_SYNC_ENABLED,
     CONF_HOST,
     CONF_PORT,
+    CONF_PV_VOLTAGE_STATS_CUTOFF,
     CONF_PV_VOLTAGE_THRESHOLD,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
@@ -37,13 +38,13 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
 
         # State tracking variables
         self._last_mode: int | None = None
-        self._sync_pending: bool = False
-        self._sync_trigger_time: datetime | None = None
         self._synced_today: bool = False
         self._last_sync_date: date | None = None
         self._is_fully_down: bool = False
         self._ac_online_time: datetime | None = None
         self._ac_offline_time: datetime | None = None
+        self._was_connected: bool = False
+        self._time_sync_success: bool = False
 
         update_interval = timedelta(
             seconds=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -70,6 +71,20 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
         threshold = self._get_config(CONF_PV_VOLTAGE_THRESHOLD, 50)
         return mode == 0x0000 and pv_voltage < threshold
 
+    @property
+    def is_below_stats_cutoff(self) -> bool:
+        """Check if PV voltage is below stats cutoff."""
+        if not self.data:
+            return False
+        pv_voltage = self.data.get("pv_v", 0) or 0
+        stats_cutoff = self._get_config(CONF_PV_VOLTAGE_STATS_CUTOFF, 20)
+        return pv_voltage < stats_cutoff
+
+    @property
+    def time_sync_success(self) -> bool:
+        """Return True if time sync was successful."""
+        return self._time_sync_success
+
     async def _async_update_data(self) -> dict:
         """Fetch data from PMU."""
         try:
@@ -84,55 +99,34 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
                 self.inverter_id = data.get("inverter_id")
                 _LOGGER.debug("Inverter ID: %s", self.inverter_id)
 
-            # Check if auto-sync feature is enabled
-            auto_sync_enabled = self._get_config(CONF_AUTO_SYNC_ENABLED, False)
-            if auto_sync_enabled:
-                current_mode = data.get("mode")
-                pv_voltage = data.get("pv_v")
-                current_date = datetime.now().date()
+            current_date = datetime.now().date()
 
-                # Reset daily sync flag at midnight
-                if self._last_sync_date != current_date:
-                    self._synced_today = False
-                    self._last_sync_date = current_date
+            # Reset daily sync flag at midnight
+            if self._last_sync_date != current_date:
+                self._synced_today = False
+                self._last_sync_date = current_date
 
-                # Detect transition from Wait (0x0000) to Normal (0x0001)
-                if (
-                    not self._synced_today
-                    and not self._sync_pending
-                    and self._last_mode == 0x0000
-                    and current_mode == 0x0001
-                ):
-                    # Inverter just started up - voltage exceeded threshold
-                    delay_minutes = self._get_config(CONF_AUTO_SYNC_DELAY, 1)
-                    delay_seconds = delay_minutes * 60
-                    self._sync_trigger_time = datetime.now() + timedelta(seconds=delay_seconds)
-                    self._sync_pending = True
-                    _LOGGER.info(
-                        "Inverter startup detected (Wait → Normal, PV voltage: %sV). "
-                        "Time sync scheduled in %d minute(s)",
-                        pv_voltage if pv_voltage else "unknown",
-                        delay_minutes,
-                    )
+            # Sync time on first poll of the day or after connection loss
+            should_sync = False
+            if not self._synced_today:
+                should_sync = True
+                _LOGGER.info("First successful poll of the day - syncing time")
+            elif not self._was_connected:
+                should_sync = True
+                _LOGGER.info("Connection restored - syncing time")
 
-                # Execute sync if trigger time reached
-                if (
-                    self._sync_pending
-                    and self._sync_trigger_time
-                    and datetime.now() >= self._sync_trigger_time
-                ):
-                    _LOGGER.info("Executing automatic time sync")
-                    success = await self.async_sync_time()
-                    if success:
-                        self._synced_today = True
-                        self._sync_pending = False
-                        self._sync_trigger_time = None
-                        _LOGGER.info("Automatic time sync completed successfully")
-                    else:
-                        _LOGGER.warning("Automatic time sync failed, will retry next poll")
+            if should_sync:
+                success = await self.async_sync_time()
+                if success:
+                    self._synced_today = True
+                    self._time_sync_success = True
+                    _LOGGER.info("Time sync completed successfully")
+                else:
+                    self._time_sync_success = False
+                    _LOGGER.warning("Time sync failed")
 
-                # Update last mode for next comparison
-                self._last_mode = current_mode
+            # Mark connection as active
+            self._was_connected = True
 
             # Track AC online/offline transitions
             current_mode = data.get("mode")
@@ -159,6 +153,7 @@ class EversolarDataUpdateCoordinator(DataUpdateCoordinator):
 
             return data
         except Exception as err:
+            self._was_connected = False
             raise UpdateFailed(f"Error communicating with PMU: {err}") from err
 
     async def async_sync_time(self) -> bool:

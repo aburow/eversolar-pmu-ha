@@ -281,6 +281,11 @@ class EversolarPMU:
             if (0x49 in vals) and (0x4A in vals):
                 h_total_hours = vals[0x49] + (vals[0x4A] * 65536)
 
+            # Error flags (32-bit: low 16 bits in 0x4D, high 16 bits in 0x4E)
+            error_flags = None
+            if (0x4D in vals) and (0x4E in vals):
+                error_flags = vals[0x4D] + (vals[0x4E] << 16)
+
             return {
                 "inverter_id": inverter_id,
                 "power_w": power_w,
@@ -293,6 +298,7 @@ class EversolarPMU:
                 "pv_v": pv_v,
                 "pv_a": pv_a,
                 "pv_w_est": pv_w_est,
+                "error_flags": error_flags,
                 "pmu_time_utc": pmu_time_utc,
                 "time_delta": time_delta,
                 "pmu_epoch": pmu_epoch,

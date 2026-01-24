@@ -35,7 +35,11 @@
         "data": {
           "scan_interval": "Scan Interval (seconds)",
           "timeout": "Connection Timeout (seconds)",
-          "timezone": "Timezone"
+          "timezone": "Timezone",
+          "pv_voltage_threshold": "PV Voltage Fully Down Threshold (V)",
+          "auto_sync_enabled": "Enable Automatic Time Sync",
+          "auto_sync_delay": "Auto Sync Delay (minutes)",
+          "pv_voltage_stats_cutoff": "PV Voltage Stats Cutoff (V)"
         }
       }
     }

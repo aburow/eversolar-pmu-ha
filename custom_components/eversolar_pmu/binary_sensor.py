@@ -26,15 +26,15 @@ async def async_setup_entry(
     coordinator: EversolarDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        EversolarACOnlineSensor(coordinator),
-        EversolarFullyDownSensor(coordinator),
+        EversolarACDCOfflineSensor(coordinator),
+        EversolarTimeSyncSensor(coordinator),
     ]
 
     async_add_entities(entities)
 
 
-class EversolarACOnlineSensor(CoordinatorEntity, BinarySensorEntity):
-    """AC Online binary sensor."""
+class EversolarACDCOfflineSensor(CoordinatorEntity, BinarySensorEntity):
+    """DC Online binary sensor."""
 
     _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.RUNNING
@@ -42,22 +42,21 @@ class EversolarACOnlineSensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator: EversolarDataUpdateCoordinator) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)
-        self._attr_name = "AC Online"
+        self._attr_name = "DC Online"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         if self.coordinator.inverter_id:
-            return f"{DOMAIN}_{self.coordinator.inverter_id}_ac_online"
-        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_ac_online"
+            return f"{DOMAIN}_{self.coordinator.inverter_id}_dc_online"
+        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_dc_online"
 
     @property
     def is_on(self) -> Optional[bool]:
-        """Return True if AC is online (Normal mode)."""
-        if not self.coordinator.data:
-            return None
-        mode = self.coordinator.data.get("mode")
-        return mode == 0x0001
+        """Return True if DC is online (inverter not fully down)."""
+        if self.coordinator.is_fully_down is not None:
+            return not self.coordinator.is_fully_down
+        return None
 
     @property
     def device_info(self) -> dict:
@@ -71,28 +70,38 @@ class EversolarACOnlineSensor(CoordinatorEntity, BinarySensorEntity):
         }
 
 
-class EversolarFullyDownSensor(CoordinatorEntity, BinarySensorEntity):
-    """Fully Down binary sensor."""
+class EversolarTimeSyncSensor(CoordinatorEntity, BinarySensorEntity):
+    """Time Sync binary sensor."""
 
     _attr_has_entity_name = True
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.OK
 
     def __init__(self, coordinator: EversolarDataUpdateCoordinator) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)
-        self._attr_name = "Fully Down"
+        self._attr_name = "Time Sync"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         if self.coordinator.inverter_id:
-            return f"{DOMAIN}_{self.coordinator.inverter_id}_fully_down"
-        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_fully_down"
+            return f"{DOMAIN}_{self.coordinator.inverter_id}_time_sync"
+        return f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_time_sync"
 
     @property
-    def is_on(self) -> Optional[bool]:
-        """Return True if inverter is fully down."""
-        return self.coordinator.is_fully_down if self.coordinator.is_fully_down is not None else None
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not super().available:
+            return False
+        # Unavailable when both AC and DC are down (fully down)
+        if self.coordinator.is_fully_down:
+            return False
+        return True
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if time sync was successful."""
+        return self.coordinator.time_sync_success
 
     @property
     def device_info(self) -> dict:
