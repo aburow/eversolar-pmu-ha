@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import CONF_HOST, DOMAIN
 from .coordinator import EversolarDataUpdateCoordinator
@@ -49,7 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register services
-    @callback
     async def handle_sync_time(call: ServiceCall) -> None:
         """Handle sync_time service call."""
         config_entry_id = call.data.get("config_entry_id")
@@ -74,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Update entry options listener
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
+    entry.add_update_listener(async_update_options)
 
     return True
 
