@@ -74,7 +74,6 @@ class EversolarTimeSyncSensor(CoordinatorEntity, BinarySensorEntity):
     """Time Sync binary sensor."""
 
     _attr_has_entity_name = True
-    _attr_device_class = BinarySensorDeviceClass.OK
 
     def __init__(self, coordinator: EversolarDataUpdateCoordinator) -> None:
         """Initialize sensor."""
