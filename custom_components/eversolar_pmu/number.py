@@ -23,7 +23,7 @@ async def async_setup_entry(
     coordinator: EversolarDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        EversolarPVVoltageStatsCutoffNumber(coordinator),
+        EversolarPVVoltageStatsCutoffNumber(hass, coordinator, entry),
     ]
 
     async_add_entities(entities)
@@ -40,10 +40,17 @@ class EversolarPVVoltageStatsCutoffNumber(CoordinatorEntity, NumberEntity):
     _attr_native_step = 1
     _attr_native_unit_of_measurement = "V"
 
-    def __init__(self, coordinator: EversolarDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: EversolarDataUpdateCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize number entity."""
         super().__init__(coordinator)
+        self.hass = hass
         self.coordinator = coordinator
+        self.config_entry = entry
 
     @property
     def unique_id(self) -> str:
@@ -59,10 +66,12 @@ class EversolarPVVoltageStatsCutoffNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set PV voltage stats cutoff."""
-        self.coordinator.config_entry.options[CONF_PV_VOLTAGE_STATS_CUTOFF] = int(value)
-        self.async_write_ha_state()
-        # Trigger coordinator update to refresh available states
-        await self.coordinator.async_request_refresh()
+        new_options = dict(self.config_entry.options)
+        new_options[CONF_PV_VOLTAGE_STATS_CUTOFF] = int(value)
+        await self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            options=new_options,
+        )
 
     @property
     def device_info(self) -> dict:
