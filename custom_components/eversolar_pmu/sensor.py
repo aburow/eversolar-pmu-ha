@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0
+# Copyright (C) 2026 Anthony Burow
+# https://github.com/aburow/eversolar-pmu-ha
+
 """Sensor platform for Eversolar PMU."""
 import logging
 from typing import Any, Optional
