@@ -1,5 +1,5 @@
 {
+  "domains": ["sensor", "binary_sensor"],
   "name": "Eversolar PMU Integration",
-  "render_readme": true,
-  "domains": ["sensor", "binary_sensor"]
+  "render_readme": true
 }
