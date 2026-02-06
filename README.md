@@ -12,6 +12,25 @@ Repository: `https://github.com/aburow/eversolar-pmu-ha`
 - 14 sensor entities, 2 binary sensors, and 1 number entity
 - No external Python dependencies
 
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph HA[Home Assistant]
+    UI[UI / Automations]
+    INT[Eversolar PMU Integration]
+    COORD[DataUpdateCoordinator]
+    ENT[Sensors / Binary Sensors / Number Entity]
+  end
+
+  PMU[Eversolar PMU / Inverter]
+
+  UI --> INT
+  INT --> COORD
+  COORD --> ENT
+  INT <-->|TCP/IP Polling| PMU
+```
+
 ## Installation
 
 ### HACS (recommended)
