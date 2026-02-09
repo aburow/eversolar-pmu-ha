@@ -4,9 +4,9 @@ A native Home Assistant custom integration for Eversolar solar inverter Power Ma
 
 NOTE: This current version is stand-alone and embeds the pmu protocol directly. The written rules of HACS
       specifically state that this is not a valid arrangement for inclusion in the hacs/default repo.
-      Therefore, the current release is fixed - as is, and can be installed as a custom reop.
-      The next release of this software is already in build with the protocol components extracted and
-      available as a pypi resource:  https://pypi.org/project/eversolar-pmu-protocol/
+      Therefore, release v1.2.1 is fixed - as is, and can be installed as a custom repo, external to the
+      HACS store. The next release of this software is already in build with the protocol components
+      extracted and available as a pypi resource:  https://pypi.org/project/eversolar-pmu-protocol/
 
 Repository: `https://github.com/aburow/eversolar-pmu-ha`
 
