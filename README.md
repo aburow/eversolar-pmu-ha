@@ -15,7 +15,7 @@ Repository: `https://github.com/aburow/eversolar-pmu-ha`
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
   subgraph HA[Home Assistant]
     UI[UI / Automations]
     INT[Eversolar PMU Integration]
